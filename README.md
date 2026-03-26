@@ -1,16 +1,20 @@
-# convert_pdf
+# ConvertPDF
 
-A new Flutter project.
+## What it does
 
-## Getting Started
+- Import a PDF file
+- Extract text and convert it to Markdown
+- Clean the Markdown with Qwen in chunks (remove tables / image-OCR text, restructure paragraphs) while streaming updates to the UI
 
-This project is a starting point for a Flutter application.
+## Run
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter pub get
+flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Optional:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx --dart-define=QWEN_BASE_URL=https://dashscope.aliyuncs.com/api/v2/apps/protocols/compatible-mode/v1/responses --dart-define=QWEN_MODEL=qwen3.5-flash
+```

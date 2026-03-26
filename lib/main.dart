@@ -1,6 +1,16 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
-void main() {
+import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_latex/flutter_markdown_latex.dart';
+import 'package:markdown/markdown.dart' as md;
+
+import 'open_data_loader.dart';
+import 'qwen_markdown_cleaner.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -11,7 +21,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'PDF转Markdown工具',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -28,9 +38,9 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'PDF转Markdown工具'),
     );
   }
 }
@@ -54,17 +64,116 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  String _markdown = '';
+  bool _loading = false;
+  bool _cleaning = false;
+  double _cleanProgress = 0;
+  String? _error;
+  String? _pdfName;
+  int _jobId = 0;
 
-  void _incrementCounter() {
+  Future<void> _exportMarkdown() async {
+    if (_markdown.trim().isEmpty) return;
+    try {
+      final base = (_pdfName ?? 'export')
+          .replaceAll(RegExp(r'\.pdf$', caseSensitive: false), '');
+      final savePath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Export Markdown',
+        fileName: '$base.md',
+        type: FileType.custom,
+        allowedExtensions: const ['md'],
+      );
+      if (savePath == null || savePath.trim().isEmpty) return;
+      final path = savePath.toLowerCase().endsWith('.md')
+          ? savePath
+          : '$savePath.md';
+      await File(path).writeAsString(_markdown);
+    } catch (e) {
+      setState(() => _error = e.toString());
+    }
+  }
+
+  Future<void> _pickAndConvertPdf() async {
+    final jobId = ++_jobId;
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _loading = true;
+      _cleaning = false;
+      _cleanProgress = 0;
+      _error = null;
     });
+
+    try {
+      final apiKey = const String.fromEnvironment('QWEN_API_KEY');
+      if (apiKey.isEmpty) {
+        throw Exception('missing QWEN_API_KEY');
+      }
+
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['pdf'],
+        withData: true,
+      );
+      final file = result?.files.single;
+      final bytes = file?.bytes;
+      if (bytes == null) {
+        setState(() => _loading = false);
+        return;
+      }
+      _pdfName = file?.name;
+
+      final md = await OpenDataLoader.pdf(bytes);
+      setState(() {
+        _markdown = md;
+        _loading = false;
+        _cleaning = true;
+        _cleanProgress = 0;
+      });
+
+      () async {
+        final cleaner = QwenMarkdownCleaner(apiKey: apiKey);
+        final chunks = QwenMarkdownCleaner.splitByLength(md, 6000);
+        final cleanedChunks = List<String>.filled(chunks.length, '');
+
+        for (var i = 0; i < chunks.length; i++) {
+          if (_jobId != jobId) return;
+          final sb = StringBuffer();
+          await for (final delta in cleaner.cleanChunkStream(
+            chunk: chunks[i],
+            index: i + 1,
+            total: chunks.length,
+          )) {
+            if (_jobId != jobId) return;
+            sb.write(delta);
+            cleanedChunks[i] = sb.toString().trimRight();
+            setState(() {
+              _markdown = cleanedChunks
+                  .where((x) => x.trim().isNotEmpty)
+                  .join('\n\n');
+              _cleanProgress = chunks.isEmpty ? 1 : (i + 0.5) / chunks.length;
+            });
+          }
+          cleanedChunks[i] = sb.toString().trimRight();
+          if (_jobId != jobId) return;
+          setState(() {
+            _markdown =
+                cleanedChunks.where((x) => x.trim().isNotEmpty).join('\n\n');
+            _cleanProgress = chunks.isEmpty ? 1 : (i + 1) / chunks.length;
+          });
+        }
+
+        if (_jobId != jobId) return;
+        setState(() {
+          _cleaning = false;
+          _cleanProgress = 1;
+        });
+      }();
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+        _cleaning = false;
+      });
+    }
   }
 
   @override
@@ -83,39 +192,66 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text(_pdfName == null || _pdfName!.isEmpty ? widget.title : _pdfName!),
+        actions: [
+          IconButton(
+            onPressed: _markdown.trim().isEmpty ? null : _exportMarkdown,
+            icon: const Icon(Icons.download),
+            tooltip: 'Export Markdown',
+          ),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              if (_cleaning)
+                LinearProgressIndicator(
+                  value: _cleanProgress == 0 ? null : _cleanProgress,
+                ),
+              if (_cleaning) const SizedBox(height: 8),
+              Expanded(
+                child: _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                        ? SelectableText(_error!)
+                        : _markdown.isEmpty
+                            ? const Center(child: Text('请选择一个 PDF'))
+                            : SingleChildScrollView(
+                                child: MarkdownBody(
+                                  data: _markdown,
+                                  selectable: true,
+                                  builders: {
+                                    'latex': LatexElementBuilder(
+                                      textStyle: const TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  },
+                                  extensionSet: md.ExtensionSet(
+                                    [
+                                      ...md.ExtensionSet.gitHubFlavored
+                                          .blockSyntaxes,
+                                      LatexBlockSyntax(),
+                                    ],
+                                    [
+                                      ...md.ExtensionSet.gitHubFlavored
+                                          .inlineSyntaxes,
+                                      LatexInlineSyntax(),
+                                    ],
+                                  ),
+                                ),
+                              ),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        onPressed: _pickAndConvertPdf,
+        tooltip: 'Upload PDF',
+        child: const Icon(Icons.upload_file),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
