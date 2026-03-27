@@ -21,7 +21,7 @@ class QwenMarkdownCleaner {
 
   static const String _systemPrompt = r'''
 你是“PDF->Markdown 清洗器”。
-任务：对用户提供的 Markdown 原文做清洗与重排，返回可读性更强的 Markdown。
+任务：对用户提供的 Markdown 原文/文本做清洗与重排，返回可读性更强的 Markdown。
 严格要求：
 1) 删除所有表格（包含 Markdown table、网格表、以及明显是表格转出来的对齐文本块）。
 2) 删除所有“图片提取出的文字/说明/识别结果”（例如：图片：、图x、Figure、Image OCR、截图文字、图注等），以及明显来自图片的零散识别文本块。

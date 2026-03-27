@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -21,7 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'PDF转Markdown工具',
+      title: 'PDF转Markdown小工具',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -40,7 +42,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      home: const MyHomePage(title: 'PDF转Markdown工具'),
+      home: const MyHomePage(title: 'PDF转Markdown小工具'),
     );
   }
 }
@@ -85,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
             autofocus: true,
             obscureText: true,
             decoration: const InputDecoration(
-              hintText: '请输入 API Key',
+              hintText: '请输入 Qwen API Key',
             ),
           ),
           actions: [
@@ -102,9 +104,15 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
     if (result != null) {
+      final key = result.trim();
       setState(() {
-        _apiKey = result.trim();
+        _apiKey = key;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(key.isEmpty ? 'API Key已清空' : 'API Key保存成功')),
+        );
+      }
     }
   }
 
@@ -113,6 +121,17 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       final base = (_pdfName ?? 'export')
           .replaceAll(RegExp(r'\.pdf$', caseSensitive: false), '');
+      final bytes = Uint8List.fromList(utf8.encode(_markdown));
+      if (Platform.isAndroid || Platform.isIOS) {
+        await FilePicker.platform.saveFile(
+          dialogTitle: 'Export Markdown',
+          fileName: '$base.md',
+          type: FileType.custom,
+          allowedExtensions: const ['md'],
+          bytes: bytes,
+        );
+        return;
+      }
       final savePath = await FilePicker.platform.saveFile(
         dialogTitle: 'Export Markdown',
         fileName: '$base.md',
@@ -164,6 +183,11 @@ class _MyHomePageState extends State<MyHomePage> {
         _cleaning = true;
         _cleanProgress = 0;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF导入成功')),
+        );
+      }
 
       () async {
         final cleaner = QwenMarkdownCleaner(apiKey: apiKey);
@@ -214,6 +238,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final renderMarkdown =
+        _markdown.contains(r'\n') ? _markdown.replaceAll(r'\n', '\n') : _markdown;
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -257,31 +283,29 @@ class _MyHomePageState extends State<MyHomePage> {
                     ? const Center(child: CircularProgressIndicator())
                     : _error != null
                         ? SelectableText(_error!)
-                        : _markdown.isEmpty
+                        : renderMarkdown.isEmpty
                             ? const Center(child: Text('请选择一个 PDF'))
-                            : SingleChildScrollView(
-                                child: MarkdownBody(
-                                  data: _markdown,
-                                  selectable: true,
-                                  builders: {
-                                    'latex': LatexElementBuilder(
-                                      textStyle: const TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                      ),
+                            : Markdown(
+                                data: renderMarkdown,
+                                selectable: true,
+                                builders: {
+                                  'latex': LatexElementBuilder(
+                                    textStyle: const TextStyle(
+                                      fontStyle: FontStyle.italic,
                                     ),
-                                  },
-                                  extensionSet: md.ExtensionSet(
-                                    [
-                                      ...md.ExtensionSet.gitHubFlavored
-                                          .blockSyntaxes,
-                                      LatexBlockSyntax(),
-                                    ],
-                                    [
-                                      ...md.ExtensionSet.gitHubFlavored
-                                          .inlineSyntaxes,
-                                      LatexInlineSyntax(),
-                                    ],
                                   ),
+                                },
+                                extensionSet: md.ExtensionSet(
+                                  [
+                                    ...md.ExtensionSet.gitHubFlavored
+                                        .blockSyntaxes,
+                                    LatexBlockSyntax(),
+                                  ],
+                                  [
+                                    ...md.ExtensionSet.gitHubFlavored
+                                        .inlineSyntaxes,
+                                    LatexInlineSyntax(),
+                                  ],
                                 ),
                               ),
               ),
