@@ -23,6 +23,13 @@ flutter pub get
 flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx
 ```
 
+macOS:
+
+```bash
+flutter pub get
+flutter run -d macos --dart-define=QWEN_API_KEY=sk-xxx
+```
+
 Optional:
 
 ```bash
@@ -65,3 +72,20 @@ Outputs:
 
 - `.github/workflows/flutter-ci-release.yml`: analyze + build APK/EXE, publish release assets on `v*` tags
 - `.github/workflows/deploy-web-pages.yml`: auto deploy web to GitHub Pages on `main`
+
+## macOS Notes
+
+- If the app starts in background only, switch back to app via `command + tab`.
+- If PDF import has no response, rebuild once after pulling latest:
+
+```bash
+flutter clean
+flutter run -d macos
+```
+
+- If cleaning fails with `Operation not permitted` to `dashscope.aliyuncs.com:443`, rebuild once with latest macOS entitlements:
+
+```bash
+flutter clean
+flutter run -d macos
+```

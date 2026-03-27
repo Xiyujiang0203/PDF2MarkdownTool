@@ -198,42 +198,50 @@ class _MyHomePageState extends State<MyHomePage> {
       }
 
       () async {
-        final cleaner = QwenMarkdownCleaner(apiKey: apiKey);
-        final chunks = QwenMarkdownCleaner.splitByLength(md, 6000);
-        final cleanedChunks = List<String>.filled(chunks.length, '');
+        try {
+          final cleaner = QwenMarkdownCleaner(apiKey: apiKey);
+          final chunks = QwenMarkdownCleaner.splitByLength(md, 6000);
+          final cleanedChunks = List<String>.filled(chunks.length, '');
 
-        for (var i = 0; i < chunks.length; i++) {
-          if (_jobId != jobId) return;
-          final sb = StringBuffer();
-          await for (final delta in cleaner.cleanChunkStream(
-            chunk: chunks[i],
-            index: i + 1,
-            total: chunks.length,
-          )) {
+          for (var i = 0; i < chunks.length; i++) {
             if (_jobId != jobId) return;
-            sb.write(delta);
+            final sb = StringBuffer();
+            await for (final delta in cleaner.cleanChunkStream(
+              chunk: chunks[i],
+              index: i + 1,
+              total: chunks.length,
+            )) {
+              if (_jobId != jobId) return;
+              sb.write(delta);
+              cleanedChunks[i] = sb.toString().trimRight();
+              setState(() {
+                _markdown = cleanedChunks
+                    .where((x) => x.trim().isNotEmpty)
+                    .join('\n\n');
+                _cleanProgress = chunks.isEmpty ? 1 : (i + 0.5) / chunks.length;
+              });
+            }
             cleanedChunks[i] = sb.toString().trimRight();
+            if (_jobId != jobId) return;
             setState(() {
-              _markdown = cleanedChunks
-                  .where((x) => x.trim().isNotEmpty)
-                  .join('\n\n');
-              _cleanProgress = chunks.isEmpty ? 1 : (i + 0.5) / chunks.length;
+              _markdown =
+                  cleanedChunks.where((x) => x.trim().isNotEmpty).join('\n\n');
+              _cleanProgress = chunks.isEmpty ? 1 : (i + 1) / chunks.length;
             });
           }
-          cleanedChunks[i] = sb.toString().trimRight();
+
           if (_jobId != jobId) return;
           setState(() {
-            _markdown =
-                cleanedChunks.where((x) => x.trim().isNotEmpty).join('\n\n');
-            _cleanProgress = chunks.isEmpty ? 1 : (i + 1) / chunks.length;
+            _cleaning = false;
+            _cleanProgress = 1;
+          });
+        } catch (e) {
+          if (_jobId != jobId) return;
+          setState(() {
+            _cleaning = false;
+            _error = '清洗失败: $e';
           });
         }
-
-        if (_jobId != jobId) return;
-        setState(() {
-          _cleaning = false;
-          _cleanProgress = 1;
-        });
       }();
     } catch (e) {
       setState(() {

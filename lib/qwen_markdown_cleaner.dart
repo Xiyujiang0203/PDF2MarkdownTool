@@ -13,11 +13,13 @@ class QwenMarkdownCleaner {
       'QWEN_MODEL',
       defaultValue: 'qwen3.5-flash',
     ),
+    this.requestTimeout = const Duration(seconds: 40),
   });
 
   final String apiKey;
   final String baseUrl;
   final String model;
+  final Duration requestTimeout;
 
   static const String _systemPrompt = r'''
 你是“PDF->Markdown 清洗器”。
@@ -90,7 +92,7 @@ class QwenMarkdownCleaner {
         })
         ..body = body;
 
-      final resp = await client.send(req);
+      final resp = await client.send(req).timeout(requestTimeout);
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
         final bytes = await resp.stream.toBytes();
         throw Exception(
@@ -102,6 +104,7 @@ class QwenMarkdownCleaner {
       String? last;
 
       await for (final line in resp.stream
+          .timeout(requestTimeout)
           .transform(utf8.decoder)
           .transform(const LineSplitter())) {
         final t = line.trimRight();

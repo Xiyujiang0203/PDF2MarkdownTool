@@ -23,6 +23,13 @@ flutter pub get
 flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx
 ```
 
+macOS：
+
+```bash
+flutter pub get
+flutter run -d macos --dart-define=QWEN_API_KEY=sk-xxx
+```
+
 可选：
 
 ```bash
@@ -65,3 +72,20 @@ flutter build web --release
 
 - `.github/workflows/flutter-ci-release.yml`：代码检查 + 构建 APK/EXE，打 `v*` tag 时自动上传 release 资产
 - `.github/workflows/deploy-web-pages.yml`：`main` 分支自动部署 Web 到 GitHub Pages
+
+## macOS 说明
+
+- 如果启动后只在后台，使用 `command + tab` 切回应用窗口。
+- 如果导入 PDF 无反应，拉取最新后重建一次：
+
+```bash
+flutter clean
+flutter run -d macos
+```
+
+- 如果清洗报错 `Operation not permitted` 且地址为 `dashscope.aliyuncs.com:443`，更新后重建一次即可：
+
+```bash
+flutter clean
+flutter run -d macos
+```
