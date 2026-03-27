@@ -71,6 +71,42 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _error;
   String? _pdfName;
   int _jobId = 0;
+  String _apiKey = const String.fromEnvironment('QWEN_API_KEY');
+
+  Future<void> _editApiKey() async {
+    final controller = TextEditingController(text: _apiKey);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('设置 API Key'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            obscureText: true,
+            decoration: const InputDecoration(
+              hintText: '请输入 API Key',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(controller.text),
+              child: const Text('保存'),
+            ),
+          ],
+        );
+      },
+    );
+    if (result != null) {
+      setState(() {
+        _apiKey = result.trim();
+      });
+    }
+  }
 
   Future<void> _exportMarkdown() async {
     if (_markdown.trim().isEmpty) return;
@@ -103,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     try {
-      final apiKey = const String.fromEnvironment('QWEN_API_KEY');
+      final apiKey = _apiKey.trim();
       if (apiKey.isEmpty) {
         throw Exception('missing QWEN_API_KEY');
       }
@@ -194,6 +230,11 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(_pdfName == null || _pdfName!.isEmpty ? widget.title : _pdfName!),
         actions: [
+          IconButton(
+            onPressed: _editApiKey,
+            icon: const Icon(Icons.key),
+            tooltip: 'Set API Key',
+          ),
           IconButton(
             onPressed: _markdown.trim().isEmpty ? null : _exportMarkdown,
             icon: const Icon(Icons.download),
