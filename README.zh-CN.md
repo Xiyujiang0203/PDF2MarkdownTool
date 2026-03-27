@@ -2,35 +2,35 @@
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
-## What it does
+## 功能
 
-- Import a PDF file
-- Extract text and convert it to Markdown
-- Clean Markdown with Qwen in chunks (remove tables / image-OCR text, restructure content)
-- Stream cleaned output live to the UI
-- Render Markdown with LaTeX formula support
-- Export current Markdown to a `.md` file
-- Set API Key from the top-right key icon in app
+- 导入 PDF 文件
+- 提取文本并转换为 Markdown
+- 使用 Qwen 分块清洗 Markdown（移除表格 / 图片 OCR 文本，重组内容）
+- 在界面中实时流式显示清洗结果
+- 渲染 Markdown，并支持 LaTeX 公式
+- 将当前 Markdown 导出为 `.md` 文件
+- 可在应用右上角钥匙图标中设置 API Key
 
-## Run
+## 运行
 
 ```bash
 flutter pub get
 flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx
 ```
 
-Optional:
+可选：
 
 ```bash
 flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx --dart-define=QWEN_BASE_URL=https://dashscope.aliyuncs.com/api/v2/apps/protocols/compatible-mode/v1/responses --dart-define=QWEN_MODEL=qwen3.5-flash
 ```
 
-## Build (Windows)
+## 构建（Windows）
 
 ```bash
 flutter build windows --release
 ```
 
-Output:
+输出：
 
 `build/windows/x64/runner/Release/convert_pdf.exe`
