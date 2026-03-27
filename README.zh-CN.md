@@ -18,19 +18,20 @@
 
 ## 运行
 
+- 适用设备：Windows
 ```bash
 flutter pub get
 flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx
 ```
 
-macOS：
+- 适用设备：macOS
 
 ```bash
 flutter pub get
 flutter run -d macos --dart-define=QWEN_API_KEY=sk-xxx
 ```
 
-iOS 模拟器：
+- 适用设备：iOS 模拟器
 
 ```bash
 flutter pub get
@@ -40,6 +41,7 @@ flutter run -d ios --dart-define=QWEN_API_KEY=sk-xxx
 
 可选：
 
+- 适用设备：Windows
 ```bash
 flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx --dart-define=QWEN_BASE_URL=https://dashscope.aliyuncs.com/api/v2/apps/protocols/compatible-mode/v1/responses --dart-define=QWEN_MODEL=qwen3.5-flash
 ```
@@ -48,18 +50,21 @@ flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx --dart-define=QWEN_BASE
 
 Windows EXE：
 
+- 适用设备：Windows
 ```bash
 flutter build windows --release
 ```
 
 Android APK：
 
+- 适用设备：Android
 ```bash
 flutter build apk --release
 ```
 
 Web：
 
+- 适用设备：Web
 ```bash
 flutter build web --release
 ```
@@ -86,6 +91,7 @@ flutter build web --release
 - 如果启动后只在后台，使用 `command + tab` 切回应用窗口。
 - 如果导入 PDF 无反应，拉取最新后重建一次：
 
+- 适用设备：macOS
 ```bash
 flutter clean
 flutter run -d macos
@@ -93,6 +99,7 @@ flutter run -d macos
 
 - 如果清洗报错 `Operation not permitted` 且地址为 `dashscope.aliyuncs.com:443`，更新后重建一次即可：
 
+- 适用设备：macOS
 ```bash
 flutter clean
 flutter run -d macos
@@ -102,6 +109,7 @@ flutter run -d macos
 
 - 如果 iOS 构建卡在 `Running pod install...`，执行：
 
+- 适用设备：iOS
 ```bash
 flutter clean
 flutter pub get

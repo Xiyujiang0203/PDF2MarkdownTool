@@ -18,19 +18,20 @@
 
 ## Run
 
+- Device: Windows
 ```bash
 flutter pub get
 flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx
 ```
 
-macOS:
+- Device: macOS
 
 ```bash
 flutter pub get
 flutter run -d macos --dart-define=QWEN_API_KEY=sk-xxx
 ```
 
-iOS Simulator:
+- Device: iOS Simulator
 
 ```bash
 flutter pub get
@@ -40,6 +41,7 @@ flutter run -d ios --dart-define=QWEN_API_KEY=sk-xxx
 
 Optional:
 
+- Device: Windows
 ```bash
 flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx --dart-define=QWEN_BASE_URL=https://dashscope.aliyuncs.com/api/v2/apps/protocols/compatible-mode/v1/responses --dart-define=QWEN_MODEL=qwen3.5-flash
 ```
@@ -48,18 +50,21 @@ flutter run -d windows --dart-define=QWEN_API_KEY=sk-xxx --dart-define=QWEN_BASE
 
 Windows EXE:
 
+- Device: Windows
 ```bash
 flutter build windows --release
 ```
 
 Android APK:
 
+- Device: Android
 ```bash
 flutter build apk --release
 ```
 
 Web:
 
+- Device: Web
 ```bash
 flutter build web --release
 ```
@@ -86,6 +91,7 @@ Outputs:
 - If the app starts in background only, switch back to app via `command + tab`.
 - If PDF import has no response, rebuild once after pulling latest:
 
+- Device: macOS
 ```bash
 flutter clean
 flutter run -d macos
@@ -93,6 +99,7 @@ flutter run -d macos
 
 - If cleaning fails with `Operation not permitted` to `dashscope.aliyuncs.com:443`, rebuild once with latest macOS entitlements:
 
+- Device: macOS
 ```bash
 flutter clean
 flutter run -d macos
@@ -102,6 +109,7 @@ flutter run -d macos
 
 - If iOS build is stuck at `Running pod install...`, run:
 
+- Device: iOS
 ```bash
 flutter clean
 flutter pub get
