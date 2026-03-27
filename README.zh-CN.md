@@ -30,6 +30,14 @@ flutter pub get
 flutter run -d macos --dart-define=QWEN_API_KEY=sk-xxx
 ```
 
+iOS 模拟器：
+
+```bash
+flutter pub get
+open -a Simulator
+flutter run -d ios --dart-define=QWEN_API_KEY=sk-xxx
+```
+
 可选：
 
 ```bash
@@ -88,4 +96,15 @@ flutter run -d macos
 ```bash
 flutter clean
 flutter run -d macos
+```
+
+## iOS 说明
+
+- 如果 iOS 构建卡在 `Running pod install...`，执行：
+
+```bash
+flutter clean
+flutter pub get
+cd ios && pod install && cd ..
+flutter run -d ios
 ```

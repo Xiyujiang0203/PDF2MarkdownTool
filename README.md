@@ -30,6 +30,14 @@ flutter pub get
 flutter run -d macos --dart-define=QWEN_API_KEY=sk-xxx
 ```
 
+iOS Simulator:
+
+```bash
+flutter pub get
+open -a Simulator
+flutter run -d ios --dart-define=QWEN_API_KEY=sk-xxx
+```
+
 Optional:
 
 ```bash
@@ -88,4 +96,15 @@ flutter run -d macos
 ```bash
 flutter clean
 flutter run -d macos
+```
+
+## iOS Notes
+
+- If iOS build is stuck at `Running pod install...`, run:
+
+```bash
+flutter clean
+flutter pub get
+cd ios && pod install && cd ..
+flutter run -d ios
 ```
