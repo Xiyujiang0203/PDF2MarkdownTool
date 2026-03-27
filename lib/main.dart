@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -122,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
       final base = (_pdfName ?? 'export')
           .replaceAll(RegExp(r'\.pdf$', caseSensitive: false), '');
       final bytes = Uint8List.fromList(utf8.encode(_markdown));
-      if (Platform.isAndroid || Platform.isIOS) {
+      if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
         await FilePicker.platform.saveFile(
           dialogTitle: 'Export Markdown',
           fileName: '$base.md',
