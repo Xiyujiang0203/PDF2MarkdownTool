@@ -11,6 +11,8 @@ import 'package:markdown/markdown.dart' as md;
 
 import 'open_data_loader.dart';
 import 'qwen_markdown_cleaner.dart';
+import 'web_download_stub.dart'
+    if (dart.library.html) 'web_download_web.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -123,7 +125,12 @@ class _MyHomePageState extends State<MyHomePage> {
       final base = (_pdfName ?? 'export')
           .replaceAll(RegExp(r'\.pdf$', caseSensitive: false), '');
       final bytes = Uint8List.fromList(utf8.encode(_markdown));
-      if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+      if (kIsWeb) {
+        final ok = downloadTextFile('$base.md', _markdown);
+        if (!ok) throw Exception('web download failed');
+        return;
+      }
+      if (Platform.isAndroid || Platform.isIOS) {
         await FilePicker.platform.saveFile(
           dialogTitle: 'Export Markdown',
           fileName: '$base.md',
